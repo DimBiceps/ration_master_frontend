@@ -1,17 +1,11 @@
 import { useEffect, useState } from "react";
 import { UserCPFC, UserInformation } from "../models/UserInforamtion";
-import { calculateCPFC } from "../api/api";
+import { calculateCPFC, calculateRation } from "../api/api";
 
 export default function Calculation(){
     const [profile, setProfile] = useState<boolean>(false);
 
-    const [userCPFCData, setUserCPFCData] = useState<UserCPFC | null>({
-        calorie: 2000,
-        carbohydrate: 100,
-        fat: 70,
-        protein: 250,
-    });
-
+    const [userCPFCData, setUserCPFCData] = useState<UserCPFC | null>(null);
     const [formData, setFormData] = useState<UserInformation>({
         weight: 0,
         height: 0,
@@ -20,18 +14,28 @@ export default function Calculation(){
         goal: "weight_loss",
         activity: "средняя активность",
     });
-    
+
     const fetchDataOnClick = async () => {
+        localStorage.setItem("userData", JSON.stringify(formData));
         try {
-            const result = await calculateCPFC(
-            formData.age,
-            formData.weight,
-            formData.height,
-            formData.gender,
-            formData.goal
+            const resultCPFC = await calculateCPFC(
+                formData.age,
+                formData.weight,
+                formData.height,
+                formData.gender,
+                formData.goal
             );
-            setUserCPFCData(result.data);
-            console.log(result);
+            setUserCPFCData(resultCPFC.data);
+            localStorage.setItem("userCPFCData", JSON.stringify(resultCPFC.data))
+            const resultRation = await calculateRation(
+                formData.age,
+                formData.weight,
+                formData.height,
+                formData.gender,
+                formData.goal
+            )
+            localStorage.setItem("userRation", JSON.stringify(resultRation.data))
+            setProfile(true);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -49,14 +53,6 @@ export default function Calculation(){
         }
     }, []);
     
-    useEffect(() => {
-        localStorage.setItem("userData", JSON.stringify(formData));
-    }, [formData]);
-
-    useEffect(() => {
-        localStorage.setItem("userCPFCData", JSON.stringify(userCPFCData));
-    }, [userCPFCData]);
-
     const handleGenderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData((prevState) => ({
             ...prevState,
@@ -84,12 +80,6 @@ export default function Calculation(){
             ...prevState,
             [name]: value
         }));
-    };
-
-    const handleUpdateData = () => {
-        fetchDataOnClick();
-        setProfile(true);
-        console.log(formData);
     };
     
     return(
@@ -171,7 +161,7 @@ export default function Calculation(){
                     </div>
                 </div>
                 <div className="d-flex justify-content-center align-content-center">
-                    <button className="btn btn-green" onClick={handleUpdateData}>
+                    <button className="btn btn-green" onClick={fetchDataOnClick}>
                         Сохранить
                     </button>
                 </div>
@@ -179,7 +169,16 @@ export default function Calculation(){
         }
         {profile &&
             <div className="container">
-                <h1 className="fw-bold">Параметры спортсмена</h1>
+                <div className="row">
+                    <div className="col">
+                        <h1 className="align-content-center fw-bold">Параметры спортсмена</h1>
+                    </div>
+                    <div className="col d-flex justify-content-end">
+                        <button className="btn btn-green mt-2" onClick={() => setProfile(false)}>
+                            Редактировать
+                        </button>
+                    </div>
+                </div>
                 <div className=" mt-2 row">
                     <hr className="w-100"  style={{borderWidth:"6px", color:"#008F20"}}></hr>
                 </div>
@@ -213,11 +212,6 @@ export default function Calculation(){
                         <h4 className="mb-3">Жиры: {userCPFCData?.fat} гр.</h4>
                         <h4 className="mb-3">Углеводы: {userCPFCData?.carbohydrate} гр.</h4>
                     </div>
-                </div>
-                <div className="d-flex justify-align-content-start  align-content-center mt-4">
-                    <button className="btn btn-green" onClick={() => setProfile(false)}>
-                        Редактировать
-                    </button>
                 </div>
             </div>
         }

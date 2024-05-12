@@ -23,4 +23,17 @@ export interface UserRation{
     dishCarbohydrates: number;
   }
 
-
+  export interface MealData {
+    name: string;
+    calorie: number;
+    protein: number;
+    fat: number;
+    carbohydrate: number;
+    gramms: number;
+  }
+  
+  export interface DailyMenu {
+    breakfast: MealData;
+    dinner: MealData;
+    supper: MealData;
+  }

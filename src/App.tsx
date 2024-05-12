@@ -11,6 +11,7 @@ import 'bootstrap'
 
 function App() {
   return (
+    
       <Routes>
         <Route path="/" element={<Page />}>
           <Route path="/home" element={<HomePage />} />
